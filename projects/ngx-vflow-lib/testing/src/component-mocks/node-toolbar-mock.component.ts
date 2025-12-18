@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, OnInit, OnDestroy } from '@angular/core';
-import type { Position, NodeToolbarComponent } from 'ngx-vflow';
+import type { Position, NodeToolbarComponent } from '@adrianwidmer/ngx-vflow';
 import { AsInterface } from '../types';
 
 @Component({

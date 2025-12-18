@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AsInterface } from '../types';
-import type { CustomTemplateEdgeComponent } from 'ngx-vflow';
+import type { CustomTemplateEdgeComponent } from '@adrianwidmer/ngx-vflow';
 
 @Component({
   selector: 'g[customTemplateEdge]',

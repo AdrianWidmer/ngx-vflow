@@ -1,7 +1,7 @@
 import { Directive, output } from '@angular/core';
-import { Connection, ReconnectionEvent } from 'ngx-vflow';
+import { Connection, ReconnectionEvent } from '@adrianwidmer/ngx-vflow';
 import { AsInterface } from '../types';
-import type { ConnectionControllerDirective, ɵHandleModel as HandleModel } from 'ngx-vflow';
+import type { ConnectionControllerDirective, ɵHandleModel as HandleModel } from '@adrianwidmer/ngx-vflow';
 
 @Directive({ selector: '[connect], [onConnect]', standalone: true })
 export class ConnectionControllerMockDirective implements AsInterface<ConnectionControllerDirective> {

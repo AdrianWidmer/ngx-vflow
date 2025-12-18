@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, TemplateRef, OnInit } from '@angular/core';
-import type { HandleComponent, Position } from 'ngx-vflow';
+import type { HandleComponent, Position } from '@adrianwidmer/ngx-vflow';
 import { AsInterface } from '../types';
 
 @Component({
@@ -15,6 +15,7 @@ export class HandleMockComponent implements AsInterface<HandleComponent>, OnInit
   public template = input<TemplateRef<any> | null>();
   public offsetX = input<number>(0);
   public offsetY = input<number>(0);
+  public dynamicContext = input<unknown>({});
 
   // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
   public ngOnInit(): void {}

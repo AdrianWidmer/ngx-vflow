@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, OnInit } from '@angular/core';
-import type { MiniMapComponent, MiniMapPosition } from 'ngx-vflow';
+import type { MiniMapComponent, MiniMapPosition } from '@adrianwidmer/ngx-vflow';
 import { AsInterface } from '../types';
 
 @Component({

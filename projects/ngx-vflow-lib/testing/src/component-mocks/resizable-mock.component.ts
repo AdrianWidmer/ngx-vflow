@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
-import type { ResizableComponent } from 'ngx-vflow';
+import type { ResizableComponent } from '@adrianwidmer/ngx-vflow';
 import { AsInterface } from '../types';
 
 @Component({

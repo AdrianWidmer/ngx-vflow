@@ -28,7 +28,7 @@ import {
   ɵConnectionModel as ConnectionModel,
   DEFAULT_OPTIMIZATION,
   AlignmentHelperSettings,
-} from 'ngx-vflow';
+} from '@adrianwidmer/ngx-vflow';
 import { toObservable } from '@angular/core/rxjs-interop';
 import {
   ConnectionTemplateMockDirective,

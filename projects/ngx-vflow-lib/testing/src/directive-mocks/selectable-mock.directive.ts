@@ -1,6 +1,6 @@
 import { Directive } from '@angular/core';
 import { AsInterface } from '../types';
-import type { SelectableDirective } from 'ngx-vflow';
+import type { SelectableDirective } from '@adrianwidmer/ngx-vflow';
 
 @Directive({
   selector: '[selectable]',

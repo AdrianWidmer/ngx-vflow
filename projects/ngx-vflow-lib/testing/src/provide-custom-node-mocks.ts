@@ -12,7 +12,7 @@ import {
   ɵSelectionService as SelectionService,
   ɵNodeRenderingService as NodeRenderingService,
   Point,
-} from 'ngx-vflow';
+} from '@adrianwidmer/ngx-vflow';
 import { of } from 'rxjs';
 
 const mockModel = () => new NodeModel({ id: 'mock', type: 'default', point: { x: 0, y: 0 } });
