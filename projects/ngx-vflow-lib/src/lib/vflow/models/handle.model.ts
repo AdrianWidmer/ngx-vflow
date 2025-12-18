@@ -94,8 +94,11 @@ export class HandleModel {
       point: this.hostOffset,
       state: this.state,
       node: this.parentNode.rawNode,
+      handle: this.rawHandle,
     },
   };
+
+  public dynamicContext = this.rawHandle.dynamicContext;
 
   constructor(
     public rawHandle: NodeHandle,

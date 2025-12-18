@@ -13,6 +13,7 @@ export interface NodeHandle {
   id?: string;
   hostReference?: Element;
   template?: TemplateRef<any> | null;
+  dynamicContext: unknown;
 }
 
 @Injectable()

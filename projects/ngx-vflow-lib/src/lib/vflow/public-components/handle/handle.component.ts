@@ -46,6 +46,11 @@ export class HandleComponent implements OnInit {
   public offsetX = input<number>(0);
   public offsetY = input<number>(0);
 
+  /**
+   * Custom dynamic context passed to handle template
+   */
+  public dynamicContext = input<unknown>({});
+
   public ngOnInit() {
     runInInjectionContext(this.injector, () => {
       const node = this.handleService.node();
@@ -60,6 +65,7 @@ export class HandleComponent implements OnInit {
             template: this.template(),
             userOffsetX: this.offsetX(),
             userOffsetY: this.offsetY(),
+            dynamicContext: this.dynamicContext(),
           },
           node,
         );
