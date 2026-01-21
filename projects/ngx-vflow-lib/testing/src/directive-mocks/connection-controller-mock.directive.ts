@@ -1,5 +1,5 @@
 import { Directive, output } from '@angular/core';
-import { Connection, ReconnectEvent } from 'ngx-vflow';
+import { Connection, ReconnectEvent } from '@adrianwidmer/ngx-vflow';
 import { AsInterface } from '../types';
 import type {
   ConnectEndEvent,
@@ -8,7 +8,7 @@ import type {
   ɵHandleModel as HandleModel,
   ReconnectEndEvent,
   ReconnectStartEvent,
-} from 'ngx-vflow';
+} from '@adrianwidmer/ngx-vflow';
 
 @Directive({
   selector: '[connectStart], [connect], [connectEnd], [reconnectStart], [reconnect], [reconnectEnd]',
