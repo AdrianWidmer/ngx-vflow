@@ -1,7 +1,5 @@
 :host {
-  display: grid;
-  grid-template-columns: 1fr;
-
+  display: block;
   width: 100%;
   height: 100%;
   user-select: none;
@@ -13,13 +11,59 @@
   }
 }
 
-.root-svg {
-  grid-row-start: 1;
-  grid-column-start: 1;
+.vflow {
+  position: relative;
+  overflow: hidden;
+  // width/height set by flowSizeController (100% or fixed view size)
+}
+
+.vflow__background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.vflow__viewport {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.vflow__edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible; // edge paths are drawn in unclipped flow coordinates
+  // Let clicks fall through empty svg areas to nodes / the pan surface; edge paths
+  // re-enable pointer-events themselves (see edge.component .interactive-edge).
+  pointer-events: none;
+}
+
+.vflow__minimap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  // ponytail: full-size overlay so the minimap's flow-space coords place correctly;
+  // pointer-events off so it doesn't swallow canvas pan/zoom. Re-enable per-rect if the
+  // minimap ever needs click-to-pan.
+  pointer-events: none;
 }
 
 .preview-flow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
   pointer-events: none;
-  grid-row-start: 1;
-  grid-column-start: 1;
 }

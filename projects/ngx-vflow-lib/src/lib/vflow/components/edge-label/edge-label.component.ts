@@ -29,6 +29,10 @@ import { BasicElementCacheService } from '../../services/basic-element-cache.ser
       .edge-label-wrapper {
         width: max-content;
 
+        /* the edges svg is pointer-events:none; labels (which can be interactive, e.g. a delete
+           button) opt back in */
+        pointer-events: auto;
+
         /*
         this is a fix for bug in chrome, for some reason if the div fully matches the size
         of foreignObject there are occurs some visual artifacts around this div

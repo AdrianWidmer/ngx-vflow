@@ -1,25 +1,88 @@
-.magnet {
-  opacity: 0;
+:host {
+  // Node is an absolutely-positioned HTML box inside the CSS-transformed viewport.
+  // Position comes from the [style.transform] host binding; size is natural (content-driven)
+  // unless a resizer controls it.
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
 }
 
-.wrapper {
+// Handle host offsets are measured against the node host (which is position:absolute → the
+// offsetParent), so the body itself stays statically positioned at the host origin.
+
+// display:table-cell lets an explicit width/height (set by the resizer) act as a *minimum* that
+// content can still expand — so a node whose content is larger than its stored size measures its
+// true size instead of clamping. Matches the pre-migration behavior.
+.vflow-node__content {
   display: table-cell;
 }
 
-.default-group-node {
-  stroke-width: 1.5px;
-  fill-opacity: 0.05;
+.vflow-node__svg {
+  display: block;
+  overflow: visible;
+}
 
-  &_selected {
-    stroke-width: 2px;
-  }
+// Per-node SVG overlay for the resizer handles (drawn in node-local flow coords).
+// Sized to the node (width/height attrs) with overflow visible so the gap/corner handles show;
+// itself transparent to pointer events, individual resizer handles re-enable them.
+.vflow-node__resizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
 
-  &_preselected {
-    stroke-width: 2px;
+  ::ng-deep * {
+    pointer-events: auto;
   }
 }
 
-.default-handle {
-  stroke: #fff;
-  fill: #1b262c;
+.vflow-node__toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+// Group node
+.vflow-node--group {
+  border: 1.5px solid var(--vflow-group-color, #1b262c);
+  border-radius: 5px;
+  background-color: color-mix(in srgb, var(--vflow-group-color, #1b262c) 5%, transparent);
+
+  &_selected,
+  &_preselected {
+    border-width: 2px;
+  }
+}
+
+// Handles — positioned in node-local flow coords via [style.transform] (see handleTransform).
+.vflow-handle,
+.vflow-handle__magnet {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vflow-handle--default {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1b262c;
+  border: 2px solid #fff;
+  box-sizing: content-box;
+  cursor: crosshair;
+}
+
+.vflow-handle--valid {
+  background: #00c853;
+}
+
+.vflow-handle--invalid {
+  background: #d50000;
+}
+
+.vflow-handle__magnet {
+  border-radius: 50%;
+  opacity: 0;
 }

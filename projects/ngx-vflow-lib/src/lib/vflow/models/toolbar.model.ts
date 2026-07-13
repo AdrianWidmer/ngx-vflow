@@ -35,6 +35,9 @@ export class ToolbarModel {
 
   public transform = computed(() => `translate(${this.point().x}, ${this.point().y})`);
 
+  // CSS transform for HTML toolbar rendering in the viewport.
+  public cssTransform = computed(() => `translate(${this.point().x}px, ${this.point().y}px)`);
+
   public size = signal({ width: 0, height: 0 });
 
   constructor(public node: NodeModel) {}

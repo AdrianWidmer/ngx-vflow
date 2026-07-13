@@ -19,7 +19,7 @@ const minSelectionSize = 2;
 
 @Directive({
   standalone: true,
-  selector: 'g[selectionBoxContext]',
+  selector: '[selectionBoxContext]',
 })
 export class SelectionBoxContextDirective {
   private flowEntitiesService = inject(FlowEntitiesService);

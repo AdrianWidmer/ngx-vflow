@@ -67,7 +67,6 @@ describe('HandleModel', () => {
   });
 
   it('should provide its absolute point', () => {
-    model.size.set({ width: 0, height: 0 });
     model.parentNode.width.set(nodeWidth);
     model.parentNode.height.set(nodeHeight);
 
@@ -75,7 +74,6 @@ describe('HandleModel', () => {
   });
 
   it('should provide offset relative to host element', () => {
-    model.size.set({ width: 0, height: 0 });
     model.parentNode.width.set(nodeWidth);
     model.parentNode.height.set(nodeHeight);
 

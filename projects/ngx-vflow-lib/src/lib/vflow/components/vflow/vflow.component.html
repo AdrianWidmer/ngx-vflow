@@ -1,78 +1,73 @@
-<svg:svg #flow rootSvgRef rootSvgContext rootPointer flowSizeController class="root-svg">
-  <defs flowDefs [markers]="markers()" />
+<div #flow rootSvgRef rootSvgContext rootPointer flowSizeController class="vflow">
+  <!-- Background (screen space, re-derives from readable viewport) -->
+  <svg:svg background class="vflow__background" />
 
-  <g background />
-
-  <svg:g mapContext spacePointContext autoPan selectionBoxContext>
-    @if (alignmentHelper(); as alignmentHelper) {
-      @if (alignmentHelper === true) {
-        <svg:g alignmentHelper />
-      } @else {
-        <svg:g alignmentHelper [tolerance]="alignmentHelper.tolerance" [lineColor]="alignmentHelper.lineColor" />
+  <!-- Viewport: CSS-transformed pan/zoom layer. Holds the edges svg + HTML node divs. -->
+  <div mapContext spacePointContext autoPan selectionBoxContext class="vflow__viewport">
+    @if (flowOptimization().detachedGroupsLayer) {
+      <!-- Groups (rendered behind edges) -->
+      @for (model of groups(); track trackNodes($index, model)) {
+        <div node [model]="model" [groupNodeTemplate]="groupNodeTemplateDirective()?.templateRef"></div>
       }
     }
 
-    <!-- Connection -->
-    <svg:g connection [model]="connection" [template]="connectionTemplateDirective()?.templateRef" />
+    <!-- Edges svg layer (flow-coord paths, pointer-events pass through except on paths) -->
+    <svg:svg class="vflow__edges">
+      <defs flowDefs [markers]="markers()" />
+
+      @if (alignmentHelper(); as alignmentHelper) {
+        @if (alignmentHelper === true) {
+          <svg:g alignmentHelper />
+        } @else {
+          <svg:g alignmentHelper [tolerance]="alignmentHelper.tolerance" [lineColor]="alignmentHelper.lineColor" />
+        }
+      }
+
+      <!-- Connection -->
+      <svg:g connection [model]="connection" [template]="connectionTemplateDirective()?.templateRef" />
+
+      <!-- Edges -->
+      @for (model of edgeModels(); track trackEdges($index, model)) {
+        <svg:g
+          edge
+          [model]="model"
+          [edgeTemplate]="edgeTemplateDirective()?.templateRef"
+          [edgeLabelHtmlTemplate]="edgeLabelHtmlDirective()?.templateRef" />
+      }
+
+      <svg:g selectionBox />
+    </svg:svg>
 
     @if (flowOptimization().detachedGroupsLayer) {
-      <!-- Groups -->
-      @for (model of groups(); track trackNodes($index, model)) {
-        <svg:g
-          node
-          [model]="model"
-          [groupNodeTemplate]="groupNodeTemplateDirective()?.templateRef"
-          [attr.transform]="model.pointTransform()" />
-      }
-      <!-- Edges  -->
-      @for (model of edgeModels(); track trackEdges($index, model)) {
-        <svg:g
-          edge
-          [model]="model"
-          [edgeTemplate]="edgeTemplateDirective()?.templateRef"
-          [edgeLabelHtmlTemplate]="edgeLabelHtmlDirective()?.templateRef" />
-      }
-      <!-- Nodes -->
+      <!-- Nodes (rendered in front of edges) -->
       @for (model of nonGroups(); track trackNodes($index, model)) {
-        <svg:g
+        <div
           node
           [model]="model"
           [nodeTemplate]="nodeTemplateDirective()?.templateRef"
-          [nodeSvgTemplate]="nodeSvgTemplateDirective()?.templateRef"
-          [attr.transform]="model.pointTransform()" />
+          [nodeSvgTemplate]="nodeSvgTemplateDirective()?.templateRef"></div>
       }
-    }
-
-    @if (!flowOptimization().detachedGroupsLayer) {
-      <!-- Edges  -->
-      @for (model of edgeModels(); track trackEdges($index, model)) {
-        <svg:g
-          edge
-          [model]="model"
-          [edgeTemplate]="edgeTemplateDirective()?.templateRef"
-          [edgeLabelHtmlTemplate]="edgeLabelHtmlDirective()?.templateRef" />
-      }
-
+    } @else {
+      <!-- All nodes (groups + nodes) in one layer, in front of edges -->
       @for (model of nodeModels(); track trackNodes($index, model)) {
-        <svg:g
+        <div
           node
           [model]="model"
           [nodeTemplate]="nodeTemplateDirective()?.templateRef"
           [nodeSvgTemplate]="nodeSvgTemplateDirective()?.templateRef"
-          [groupNodeTemplate]="groupNodeTemplateDirective()?.templateRef"
-          [attr.transform]="model.pointTransform()" />
+          [groupNodeTemplate]="groupNodeTemplateDirective()?.templateRef"></div>
       }
     }
+  </div>
 
-    <svg:g selectionBox />
-  </svg:g>
-
-  <!-- Minimap -->
+  <!-- Minimap (screen space) -->
   @if (minimap(); as minimap) {
-    <ng-container [ngTemplateOutlet]="minimap.template()" />
+    <svg:svg class="vflow__minimap">
+      <ng-container [ngTemplateOutlet]="minimap.template()" />
+    </svg:svg>
   }
-</svg:svg>
 
-@if (flowOptimization().virtualization) {
-  <canvas previewFlow class="preview-flow" [width]="flowWidth()" [height]="flowHeight()"></canvas>
-}
+  @if (flowOptimization().virtualization) {
+    <canvas previewFlow class="preview-flow" [width]="flowWidth()" [height]="flowHeight()"></canvas>
+  }
+</div>

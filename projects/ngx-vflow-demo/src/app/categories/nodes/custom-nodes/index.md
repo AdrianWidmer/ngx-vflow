@@ -2,10 +2,12 @@
 keyword: 'FeaturesCustomNodes'
 ---
 
-> **Warning**
-> Be careful with CSS rules applied to node content. Custom nodes are implemented with SVG's `foreignObject` element, and Safari has issues with some CSS rules inside `foreignObject`. Therefore, please check this browser when applying complex styling.
-
 This is where things become a lot more interesting. You can create custom nodes with HTML and CSS.
+
+> **Note**
+> Since v3, custom nodes are rendered as plain HTML elements (no `<foreignObject>`), so ordinary CSS
+> — including `z-index` — works as expected, across browsers. See the
+> [architecture](*/introduction/architecture) page for details.
 
 ## Template nodes
 

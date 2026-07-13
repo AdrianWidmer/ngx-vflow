@@ -18,7 +18,7 @@ const defaultRepeated = true;
 
 @Component({
   standalone: true,
-  selector: 'g[background]',
+  selector: 'svg[background]',
   templateUrl: './background.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

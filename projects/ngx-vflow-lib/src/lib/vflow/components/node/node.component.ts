@@ -22,10 +22,10 @@ import { SelectionService } from '../../services/selection.service';
 import { ConnectionControllerDirective } from '../../directives/connection-controller.directive';
 import { NodeAccessorService } from '../../services/node-accessor.service';
 import { OverlaysService } from '../../services/overlays.service';
-import { HandleSizeControllerDirective } from '../../directives/handle-size-controller.directive';
 import { NgTemplateOutlet, NgComponentOutlet, AsyncPipe } from '@angular/common';
 import { DefaultNodeComponent } from '../default-node/default-node.component';
 import { PointerDirective } from '../../directives/pointer.directive';
+import { SpacePointContextDirective } from '../../directives/space-point-context.directive';
 
 // TODO: fix loading of these by @defer (should work in Angular 18+)
 // public components that uses in default node (loaded by defer)
@@ -37,13 +37,14 @@ import { NodeResizeControllerDirective } from '../../directives/node-resize-cont
 export type HandleState = 'valid' | 'invalid' | 'idle';
 
 @Component({
-  selector: 'g[node]',
+  selector: 'div[node]',
   templateUrl: './node.component.html',
   styleUrls: ['./node.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [HandleService, NodeAccessorService],
   host: {
     class: 'vflow-node',
+    '[style.transform]': 'model().nodeTransform()',
     '[class.vflow-node--undraggable]': 'hostUndraggable()',
     '[class.vflow-node--drag-handles-only]': 'hostDragHandlesOnly()',
   },
@@ -54,7 +55,6 @@ export type HandleState = 'valid' | 'invalid' | 'idle';
     NgTemplateOutlet,
     NgComponentOutlet,
     ResizableComponent,
-    HandleSizeControllerDirective,
     NodeHandlesControllerDirective,
     NodeResizeControllerDirective,
     AsyncPipe,
@@ -68,9 +68,10 @@ export class NodeComponent implements OnInit, OnDestroy {
   private nodeRenderingService = inject(NodeRenderingService);
   private flowSettingsService = inject(FlowSettingsService);
   private selectionService = inject(SelectionService);
-  private hostRef = inject<ElementRef<SVGElement>>(ElementRef);
+  private hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private nodeAccessor = inject(NodeAccessorService);
   private overlaysService = inject(OverlaysService);
+  private spacePointContext = inject(SpacePointContextDirective);
 
   // TODO remove dependency from this directive
   private connectionController = inject(ConnectionControllerDirective, { optional: true });
@@ -108,7 +109,7 @@ export class NodeComponent implements OnInit, OnDestroy {
     effect(
       () => {
         if (this.model().draggable()) {
-          this.draggableService.enable(this.hostRef.nativeElement, this.model());
+          this.draggableService.enable(this.hostRef.nativeElement, this.model(), this.spacePointContext);
         } else {
           this.draggableService.disable(this.hostRef.nativeElement);
         }
@@ -121,6 +122,15 @@ export class NodeComponent implements OnInit, OnDestroy {
     this.model().isVisible.set(false);
 
     this.draggableService.destroy(this.hostRef.nativeElement);
+  }
+
+  /**
+   * Places the handle at its (node-local, flow-unit) offset and centers it on that point.
+   * hostOffset already includes the user offset and the content-relative position.
+   */
+  protected handleTransform(handle: HandleModel): string {
+    const { x, y } = handle.hostOffset();
+    return `translate(${x}px, ${y}px) translate(-50%, -50%)`;
   }
 
   protected startConnection(event: Event, handle: HandleModel) {

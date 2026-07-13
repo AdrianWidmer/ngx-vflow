@@ -14,13 +14,17 @@
   }
 }
 
+// The edges svg is pointer-events:none (so empty areas fall through to nodes / the pan surface);
+// the interactive parts opt back in here.
 .interactive-edge {
   fill: none;
   stroke-width: 20;
   stroke: transparent;
+  pointer-events: stroke;
 }
 
 .reconnect-handle {
   fill: transparent;
   cursor: move;
+  pointer-events: all;
 }

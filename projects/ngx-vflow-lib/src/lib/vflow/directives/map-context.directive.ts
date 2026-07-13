@@ -12,14 +12,14 @@ import { allowRootZoomForNodeTarget } from '../utils/allow-root-zoom-for-node-ta
 
 @Directive({
   standalone: true,
-  selector: 'g[mapContext]',
+  selector: '[mapContext]',
   host: {
-    '[attr.transform]': 'transform()',
+    '[style.transform]': 'transform()',
   },
 })
 export class MapContextDirective implements OnInit {
   protected rootSvg = inject(RootSvgReferenceDirective).element;
-  protected host = inject<ElementRef<SVGGElement>>(ElementRef).nativeElement;
+  protected host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   protected selectionService = inject(SelectionService);
   protected viewportService = inject(ViewportService);
   protected flowSettingsService = inject(FlowSettingsService);
@@ -72,11 +72,11 @@ export class MapContextDirective implements OnInit {
     }
   });
 
-  protected zoomBehavior!: ZoomBehavior<SVGSVGElement, unknown>;
+  protected zoomBehavior!: ZoomBehavior<HTMLElement, unknown>;
 
   public ngOnInit(): void {
     this.zone.runOutsideAngular(() => {
-      this.zoomBehavior = zoom<SVGSVGElement, unknown>()
+      this.zoomBehavior = zoom<HTMLElement, unknown>()
         .scaleExtent([this.flowSettingsService.minZoom(), this.flowSettingsService.maxZoom()])
         .filter(this.filterCondition)
         .on('start', this.handleZoomStart)
@@ -91,7 +91,9 @@ export class MapContextDirective implements OnInit {
     // update public signal for user to read
     this.viewportService.readableViewport.set(mapTransformToViewportState(transform));
 
-    this.transform.set(transform.toString());
+    // CSS transform on the viewport div (NOT ZoomTransform.toString(), which emits SVG-style
+    // "translate(x,y) scale(k)" without px units and is invalid for CSS).
+    this.transform.set(`translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`);
   };
 
   private handleZoomStart = ({ transform }: ZoomEvent) => {
@@ -140,4 +142,4 @@ declare module 'd3-selection' {
   }
 }
 
-type ZoomEvent = D3ZoomEvent<SVGSVGElement, unknown>;
+type ZoomEvent = D3ZoomEvent<HTMLElement, unknown>;

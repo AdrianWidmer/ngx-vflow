@@ -12,19 +12,10 @@ export type HandleState = 'valid' | 'invalid' | 'idle';
 export class HandleModel {
   public readonly strokeWidth = 2;
 
-  /**
-   * Pre-computed size for default handle, changed dynamically
-   * for custom handles
-   */
-  public size = signal({
-    width: 10 + 2 * this.strokeWidth,
-    height: 10 + 2 * this.strokeWidth,
-  });
-
   public pointAbsolute = computed(() => {
     return {
-      x: this.parentNode.globalPoint().x + this.hostOffset().x + this.sizeOffset().x,
-      y: this.parentNode.globalPoint().y + this.hostOffset().y + this.sizeOffset().y,
+      x: this.parentNode.globalPoint().x + this.hostOffset().x,
+      y: this.parentNode.globalPoint().y + this.hostOffset().y,
     };
   });
 
@@ -78,19 +69,6 @@ export class HandleModel {
           x: -this.rawHandle.userOffsetX + this.hostPosition().x + this.hostSize().width / 2,
           y: -this.rawHandle.userOffsetY + this.parentNode.height(),
         };
-    }
-  });
-
-  private sizeOffset = computed(() => {
-    switch (this.rawHandle.position) {
-      case 'left':
-        return { x: -(this.size().width / 2), y: 0 };
-      case 'right':
-        return { x: this.size().width / 2, y: 0 };
-      case 'top':
-        return { x: 0, y: -(this.size().height / 2) };
-      case 'bottom':
-        return { x: 0, y: this.size().height / 2 };
     }
   });
 

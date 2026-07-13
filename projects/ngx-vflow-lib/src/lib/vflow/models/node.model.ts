@@ -5,7 +5,6 @@ import { HandleModel } from './handle.model';
 import { FlowEntity } from '../interfaces/flow-entity.interface';
 import { Point } from '../interfaces/point.interface';
 import { FlowEntitiesService } from '../services/flow-entities.service';
-import { MAGIC_NUMBER_TO_FIX_GLITCH_IN_CHROME } from '../constants/magic-number-to-fix-glitch-in-chrome.constant';
 import { Contextable } from '../interfaces/contextable.interface';
 import { GroupNodeContext, NodeContext } from '../interfaces/template-context.interface';
 import { Observable, of } from 'rxjs';
@@ -36,14 +35,11 @@ export class NodeModel<T = unknown>
   public height$: Observable<number>;
 
   /**
-   * If resizer is used, the node size fully depends on the resizer
-   * Otherwise it calculates the size based on the content
+   * If resizer is used, the node size fully depends on the resizer.
+   * Otherwise the size is driven by the HTML content (natural size) — `null` maps to CSS `auto`.
    */
-  public styleWidth = computed(() => (this.controlledByResizer() ? `${this.width()}px` : '100%'));
-  public styleHeight = computed(() => (this.controlledByResizer() ? `${this.height()}px` : '100%'));
-
-  public foWidth = computed(() => this.width() + MAGIC_NUMBER_TO_FIX_GLITCH_IN_CHROME);
-  public foHeight = computed(() => this.height() + MAGIC_NUMBER_TO_FIX_GLITCH_IN_CHROME);
+  public styleWidth = computed(() => (this.controlledByResizer() ? `${this.width()}px` : null));
+  public styleHeight = computed(() => (this.controlledByResizer() ? `${this.height()}px` : null));
 
   public renderOrder = signal(0);
 
@@ -70,7 +66,11 @@ export class NodeModel<T = unknown>
     return { x, y };
   });
 
+  // SVG-style transform, still used by the minimap (which renders in SVG).
   public pointTransform = computed(() => `translate(${this.globalPoint().x}, ${this.globalPoint().y})`);
+
+  // CSS transform for the HTML node div in the viewport.
+  public nodeTransform = computed(() => `translate(${this.globalPoint().x}px, ${this.globalPoint().y}px)`);
 
   public handles = signal<HandleModel[]>([]);
   public handles$: Observable<HandleModel[]>;

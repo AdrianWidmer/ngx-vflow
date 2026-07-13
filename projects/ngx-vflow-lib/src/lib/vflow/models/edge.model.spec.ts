@@ -117,10 +117,8 @@ describe('EdgeModel', () => {
    * @todo add more path tests
    */
   it('should provide path', () => {
-    model.source()?.handles()[0].size.set({ width: 1, height: 1 });
-    model.target()?.handles()[0].size.set({ width: 1, height: 1 });
-
-    expect(model.path().path).toBe('M 15.5,15L 14.5,15');
+    // Edges now connect at the handle center (no half-size offset).
+    expect(model.path().path).toBe('M 15,15L 15,15');
   });
 
   it('should set detached === true if there no source', () => {

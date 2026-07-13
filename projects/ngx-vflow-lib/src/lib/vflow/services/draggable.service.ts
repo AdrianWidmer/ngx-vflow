@@ -14,6 +14,7 @@ import type { Subscription } from 'rxjs';
 import { pairwise, filter, skip } from 'rxjs/operators';
 import { KeyboardService } from './keyboard.service';
 import { isGroupNode } from '../utils/is-group-node';
+import { SpacePointContextDirective } from '../directives/space-point-context.directive';
 
 type DragEvent = D3DragEvent<Element, unknown, unknown>;
 
@@ -31,9 +32,11 @@ export class DraggableService {
    *
    * @param element target element for toggling draggable
    * @param model model with data for this element
+   * @param spacePoint used to convert pointer (client) coords → flow coords; the node is now an
+   *   HTML div, so d3-drag's `event.x/y` are no longer in flow space and cannot be trusted.
    */
-  public enable(element: Element, model: NodeModel) {
-    select(element).call(this.getDragBehavior(model));
+  public enable(element: Element, model: NodeModel, spacePoint: SpacePointContextDirective) {
+    select(element).call(this.getDragBehavior(model, spacePoint));
   }
 
   /**
@@ -65,10 +68,18 @@ export class DraggableService {
    * @param model
    * @returns
    */
-  private getDragBehavior(model: NodeModel) {
+  private getDragBehavior(model: NodeModel, spacePoint: SpacePointContextDirective) {
     let dragNodes: NodeModel[] = [];
     let initialPositions: Point[] = [];
     let moveNodesOnAutoPanSub: Subscription | null = null;
+
+    // Pointer position in flow coords, derived from the raw client event (not event.x/y, which on
+    // an HTML node are unscaled layout px).
+    const flowPoint = (event: DragEvent): Point => {
+      const src = event.sourceEvent as MouseEvent | TouchEvent;
+      const touch = 'touches' in src ? (src.touches[0] ?? src.changedTouches[0]) : src;
+      return spacePoint.documentPointToFlowPoint({ x: touch.clientX, y: touch.clientY });
+    };
 
     const filterCondition = (event: Event) => {
       // Do not drag group node if selection occurs inside group node (by keyboard)
@@ -96,9 +107,11 @@ export class DraggableService {
 
         this.flowStatusService.setNodeDragStartStatus(model);
 
+        const start = flowPoint(event);
+
         initialPositions = dragNodes.map((node) => ({
-          x: node.point().x - event.x,
-          y: node.point().y - event.y,
+          x: node.point().x - start.x,
+          y: node.point().y - start.y,
         }));
 
         // Subscribe to viewport changes during drag to sync node positions with auto-pan
@@ -106,10 +119,12 @@ export class DraggableService {
       })
 
       .on('drag', (event: DragEvent) => {
+        const current = flowPoint(event);
+
         dragNodes.forEach((model, index) => {
           const point = {
-            x: round(event.x + initialPositions[index].x),
-            y: round(event.y + initialPositions[index].y),
+            x: round(current.x + initialPositions[index].x),
+            y: round(current.y + initialPositions[index].y),
           };
 
           this.alignToGrid(point);
