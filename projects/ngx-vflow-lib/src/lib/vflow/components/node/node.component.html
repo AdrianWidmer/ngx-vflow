@@ -126,8 +126,6 @@
   @if (showMagnet()) {
     <div
       class="vflow-handle__magnet"
-      [style.width.px]="model().magnetRadius * 2"
-      [style.height.px]="model().magnetRadius * 2"
       [style.transform]="handleTransform(handle)"
       (pointerEnd)="endConnection(); resetValidateConnection(handle)"
       (pointerOver)="validateConnection(handle)"

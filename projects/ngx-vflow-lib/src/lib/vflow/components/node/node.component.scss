@@ -64,25 +64,29 @@
   left: 0;
 }
 
+// Visuals are driven by CSS custom properties (defaults preserve the built-in look). Override them
+// per-flow / per-node / per-handle via the normal cascade — no library inputs needed.
 .vflow-handle--default {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #1b262c;
-  border: 2px solid #fff;
+  width: var(--vflow-handle-size, 8px);
+  height: var(--vflow-handle-size, 8px);
+  border-radius: var(--vflow-handle-radius, 50%);
+  background: var(--vflow-handle-color, #1b262c);
+  border: 2px solid var(--vflow-handle-border-color, #fff);
   box-sizing: content-box;
   cursor: crosshair;
 }
 
 .vflow-handle--valid {
-  background: #00c853;
+  background: var(--vflow-handle-valid-color, #00c853);
 }
 
 .vflow-handle--invalid {
-  background: #d50000;
+  background: var(--vflow-handle-invalid-color, #d50000);
 }
 
 .vflow-handle__magnet {
-  border-radius: 50%;
+  width: var(--vflow-magnet-width, 40px);
+  height: var(--vflow-magnet-height, 40px);
+  border-radius: var(--vflow-magnet-radius, 50%);
   opacity: 0;
 }
