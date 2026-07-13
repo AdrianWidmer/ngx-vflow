@@ -10,7 +10,10 @@ import { align } from '../utils/align-number';
 import { FlowStatusService } from './flow-status.service';
 import { ViewportService } from './viewport.service';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Subscription, pairwise, filter, skip } from 'rxjs';
+import type { Subscription } from 'rxjs';
+import { pairwise, filter, skip } from 'rxjs/operators';
+import { KeyboardService } from './keyboard.service';
+import { isGroupNode } from '../utils/is-group-node';
 
 type DragEvent = D3DragEvent<Element, unknown, unknown>;
 
@@ -20,6 +23,7 @@ export class DraggableService {
   private settingsService = inject(FlowSettingsService);
   private flowStatusService = inject(FlowStatusService);
   private viewportService = inject(ViewportService);
+  private keyboardService = inject(KeyboardService);
   private injector = inject(Injector);
 
   /**
@@ -36,19 +40,23 @@ export class DraggableService {
    * Disable draggable behavior for element.
    *
    * @param element target element for toggling draggable
-   * @param model model with data for this element
    */
   public disable(element: Element) {
-    select(element).call(drag().on('drag', null));
+    this.clearDrag(element);
   }
 
   /**
-   * TODO: not shure if this work, need to check
-   *
-   * @param element
+   * Remove d3-drag listeners and inline styles it applied (so pointer events can reach root zoom).
    */
   public destroy(element: Element) {
-    select(element).on('.drag', null);
+    this.clearDrag(element);
+  }
+
+  private clearDrag(element: Element) {
+    const s = select(element);
+    s.on('.drag', null);
+    s.style('touch-action', null);
+    s.style('-webkit-tap-highlight-color', null);
   }
 
   /**
@@ -63,6 +71,16 @@ export class DraggableService {
     let moveNodesOnAutoPanSub: Subscription | null = null;
 
     const filterCondition = (event: Event) => {
+      // Do not drag group node if selection occurs inside group node (by keyboard)
+      if (isGroupNode(model) && this.keyboardService.isActiveAction('selection')) {
+        return false;
+      }
+
+      // Match d3-drag defaultFilter: primary button only, no ctrl+click (context menu on macOS)
+      if (event instanceof MouseEvent && (event.ctrlKey || event.button !== 0)) {
+        return false;
+      }
+
       // if there is at least one drag handle, we should check if we are dragging it
       if (model.dragHandlesCount()) {
         return !!(event.target as Element).closest('.vflow-drag-handle');
@@ -97,6 +115,8 @@ export class DraggableService {
           this.alignToGrid(point);
           this.moveNode(model, point);
         });
+
+        this.flowStatusService.setNodeDragStatus(model);
       })
 
       .on('end', () => {
@@ -112,8 +132,24 @@ export class DraggableService {
           .nodes()
           // selected draggable nodes (with current node)
           .filter((node) => node.selected() && node.draggable())
+          // do not drag descendants if selected ancestor is already dragged
+          .filter((node) => !this.hasSelectedDraggableAncestor(node))
       : // we only can move current node if it's not selected
         [model];
+  }
+
+  private hasSelectedDraggableAncestor(node: NodeModel) {
+    let parent = node.parent();
+
+    while (parent) {
+      if (parent.selected() && parent.draggable()) {
+        return true;
+      }
+
+      parent = parent.parent();
+    }
+
+    return false;
   }
 
   /**
@@ -121,8 +157,9 @@ export class DraggableService {
    */
   private moveNode(model: NodeModel, point: Point) {
     const parent = model.parent();
+
     // keep node in bounds of parent
-    if (parent) {
+    if (model.extent() === 'parent' && parent) {
       point.x = Math.min(parent.width() - model.width(), point.x);
       point.x = Math.max(0, point.x);
 
@@ -155,7 +192,9 @@ export class DraggableService {
       .pipe(
         skip(1), // Skip initial value
         pairwise(),
-        filter(([prev, next]) => prev.x !== next.x || prev.y !== next.y), // Only translate changes
+        filter(
+          ([prev, next]) => prev.zoom === next.zoom && (prev.x !== next.x || prev.y !== next.y), // Pan only, not wheel zoom (x/y+k change together)
+        ),
       )
       .subscribe(([prev, next]) => {
         const dx = next.x - prev.x;

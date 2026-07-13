@@ -4,7 +4,7 @@ import { HandleModel } from '../models/handle.model';
 import { ConnectionInternal } from '../interfaces/connection.internal.interface';
 import { EdgeModel } from '../models/edge.model';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { shareReplay } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 
 export interface FlowStatusIdle {
   state: 'idle';
@@ -84,11 +84,22 @@ export interface FlowStatusNodeDragStart {
   };
 }
 
+export interface FlowStatusNodeDrag {
+  state: 'node-drag';
+  payload: {
+    node: NodeModel;
+  };
+}
+
 export interface FlowStatusNodeDragEnd {
   state: 'node-drag-end';
   payload: {
     node: NodeModel;
   };
+}
+
+export interface FlowStatusSelectionBoxEnd {
+  state: 'selection-box-end';
 }
 
 export type FlowStatus =
@@ -104,7 +115,9 @@ export type FlowStatus =
   | FlowStatusReconnectionReleaseValidated
   | FlowStatusReconnectionDropped
   | FlowStatusNodeDragStart
-  | FlowStatusNodeDragEnd;
+  | FlowStatusNodeDrag
+  | FlowStatusNodeDragEnd
+  | FlowStatusSelectionBoxEnd;
 
 @Injectable()
 export class FlowStatusService {
@@ -208,8 +221,16 @@ export class FlowStatusService {
     this.status.set({ state: 'node-drag-start', payload: { node } });
   }
 
+  public setNodeDragStatus(node: NodeModel) {
+    this.status.set({ state: 'node-drag', payload: { node } });
+  }
+
   public setNodeDragEndStatus(node: NodeModel) {
     this.status.set({ state: 'node-drag-end', payload: { node } });
+  }
+
+  public setSelectionBoxEndStatus() {
+    this.status.set({ state: 'selection-box-end' });
   }
 }
 
@@ -217,6 +238,14 @@ export function isNodeDragStartStatus(params: FlowStatus): params is FlowStatusN
   return params.state === 'node-drag-start';
 }
 
+export function isNodeDragStatus(params: FlowStatus): params is FlowStatusNodeDrag {
+  return params.state === 'node-drag';
+}
+
 export function isNodeDragEndStatus(params: FlowStatus): params is FlowStatusNodeDragEnd {
   return params.state === 'node-drag-end';
+}
+
+export function isSelectionBoxEndStatus(params: FlowStatus): params is FlowStatusSelectionBoxEnd {
+  return params.state === 'selection-box-end';
 }

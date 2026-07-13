@@ -27,8 +27,7 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "tsConfig": "projects/ngx-vflow-lib/tsconfig.spec.json",
-            "polyfills": ["zone.js", "zone.js/testing"]
+            "tsConfig": "projects/ngx-vflow-lib/tsconfig.spec.json"
           }
         },
         "lint": {
@@ -56,11 +55,20 @@
             "outputPath": "dist/ngx-vflow-demo",
             "index": "projects/ngx-vflow-demo/src/index.html",
             "browser": "projects/ngx-vflow-demo/src/main.ts",
-            "polyfills": ["zone.js"],
             "tsConfig": "projects/ngx-vflow-demo/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               "projects/ngx-vflow-demo/src/favicon.ico",
+              {
+                "glob": "robots.txt",
+                "input": "projects/ngx-vflow-demo/src/assets",
+                "output": "/"
+              },
+              {
+                "glob": "sitemap.xml",
+                "input": "projects/ngx-vflow-demo/src/assets",
+                "output": "/"
+              },
               "projects/ngx-vflow-demo/src/assets",
               {
                 "glob": "**/*",
@@ -142,7 +150,6 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "projects/ngx-vflow-demo/tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [

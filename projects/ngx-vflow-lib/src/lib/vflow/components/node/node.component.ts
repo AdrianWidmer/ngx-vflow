@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { DraggableService } from '../../services/draggable.service';
 import { NodeModel } from '../../models/node.model';
-import { FlowStatusService } from '../../services/flow-status.service';
+import { FlowStatusService, isSelectionBoxEndStatus } from '../../services/flow-status.service';
 import { HandleService } from '../../services/handle.service';
 import { HandleModel } from '../../models/handle.model';
 import { NodeRenderingService } from '../../services/node-rendering.service';
@@ -44,6 +44,8 @@ export type HandleState = 'valid' | 'invalid' | 'idle';
   providers: [HandleService, NodeAccessorService],
   host: {
     class: 'vflow-node',
+    '[class.vflow-node--undraggable]': 'hostUndraggable()',
+    '[class.vflow-node--drag-handles-only]': 'hostDragHandlesOnly()',
   },
   imports: [
     PointerDirective,
@@ -74,6 +76,12 @@ export class NodeComponent implements OnInit, OnDestroy {
   private connectionController = inject(ConnectionControllerDirective, { optional: true });
 
   public model = input.required<NodeModel>();
+
+  protected readonly hostUndraggable = computed(() => !this.model().draggable());
+
+  protected readonly hostDragHandlesOnly = computed(
+    () => this.model().draggable() && this.model().dragHandlesCount() > 0,
+  );
 
   public nodeTemplate = input<TemplateRef<any>>();
 
@@ -141,6 +149,11 @@ export class NodeComponent implements OnInit, OnDestroy {
   }
 
   protected selectNode() {
+    // do not select node if selection is performed by selection box
+    if (isSelectionBoxEndStatus(this.flowStatusService.status())) {
+      return;
+    }
+
     if (this.flowSettingsService.entitiesSelectable()) {
       this.selectionService.select(this.model());
     }

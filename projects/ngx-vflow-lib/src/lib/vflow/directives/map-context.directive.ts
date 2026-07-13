@@ -7,6 +7,8 @@ import { RootSvgReferenceDirective } from './reference.directive';
 import { ViewportState } from '../interfaces/viewport.interface';
 import { SelectionService, ViewportForSelection } from '../services/selection.service';
 import { FlowSettingsService } from '../services/flow-settings.service';
+import { KeyboardService } from '../services/keyboard.service';
+import { allowRootZoomForNodeTarget } from '../utils/allow-root-zoom-for-node-target';
 
 @Directive({
   standalone: true,
@@ -21,6 +23,7 @@ export class MapContextDirective implements OnInit {
   protected selectionService = inject(SelectionService);
   protected viewportService = inject(ViewportService);
   protected flowSettingsService = inject(FlowSettingsService);
+  protected keyboardService = inject(KeyboardService);
   protected zone = inject(NgZone);
 
   protected rootSvgSelection = select(this.rootSvg);
@@ -30,47 +33,44 @@ export class MapContextDirective implements OnInit {
   protected viewportForSelection: Partial<ViewportForSelection> = {};
 
   // under the hood this effect triggers handleZoom, so error throws without this flag
-  protected manualViewportChangeEffect = effect(
-    () => {
-      const viewport = this.viewportService.writableViewport();
-      const state = viewport.state;
+  protected manualViewportChangeEffect = effect(() => {
+    const viewport = this.viewportService.writableViewport();
+    const state = viewport.state;
 
-      if (viewport.changeType === 'initial') {
-        return;
-      }
+    if (viewport.changeType === 'initial') {
+      return;
+    }
 
-      // If only zoom provided
-      if (isDefined(state.zoom) && !isDefined(state.x) && !isDefined(state.y)) {
-        this.rootSvgSelection.transition().duration(viewport.duration).call(this.zoomBehavior.scaleTo, state.zoom);
+    // If only zoom provided
+    if (isDefined(state.zoom) && !isDefined(state.x) && !isDefined(state.y)) {
+      this.rootSvgSelection.transition().duration(viewport.duration).call(this.zoomBehavior.scaleTo, state.zoom);
 
-        return;
-      }
+      return;
+    }
 
-      // If only pan provided
-      if (isDefined(state.x) && isDefined(state.y) && !isDefined(state.zoom)) {
-        // remain same zoom value
-        const zoom = untracked(this.viewportService.readableViewport).zoom;
+    // If only pan provided
+    if (isDefined(state.x) && isDefined(state.y) && !isDefined(state.zoom)) {
+      // remain same zoom value
+      const zoom = untracked(this.viewportService.readableViewport).zoom;
 
-        this.rootSvgSelection
-          .transition()
-          .duration(viewport.duration)
-          .call(this.zoomBehavior.transform, zoomIdentity.translate(state.x, state.y).scale(zoom));
+      this.rootSvgSelection
+        .transition()
+        .duration(viewport.duration)
+        .call(this.zoomBehavior.transform, zoomIdentity.translate(state.x, state.y).scale(zoom));
 
-        return;
-      }
+      return;
+    }
 
-      // If whole viewort state provided
-      if (isDefined(state.x) && isDefined(state.y) && isDefined(state.zoom)) {
-        this.rootSvgSelection
-          .transition()
-          .duration(viewport.duration)
-          .call(this.zoomBehavior.transform, zoomIdentity.translate(state.x, state.y).scale(state.zoom));
+    // If whole viewort state provided
+    if (isDefined(state.x) && isDefined(state.y) && isDefined(state.zoom)) {
+      this.rootSvgSelection
+        .transition()
+        .duration(viewport.duration)
+        .call(this.zoomBehavior.transform, zoomIdentity.translate(state.x, state.y).scale(state.zoom));
 
-        return;
-      }
-    },
-    { allowSignalWrites: true },
-  );
+      return;
+    }
+  });
 
   protected zoomBehavior!: ZoomBehavior<SVGSVGElement, unknown>;
 
@@ -115,13 +115,8 @@ export class MapContextDirective implements OnInit {
     });
   };
 
-  private filterCondition = (event: Event) => {
-    if (event.type === 'mousedown' || event.type === 'touchstart') {
-      return (event.target as Element).closest('.vflow-node') === null;
-    }
-
-    return true;
-  };
+  private filterCondition = (event: Event) =>
+    allowRootZoomForNodeTarget(event, this.keyboardService.isActiveAction('selection'));
 }
 
 const mapTransformToViewportState = (transform: ZoomTransform): ViewportState => ({

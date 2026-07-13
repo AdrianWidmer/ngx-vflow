@@ -26,7 +26,7 @@ import {
   NodeSvgTemplateDirective,
 } from '../../directives/template.directive';
 import { addNodesToEdges } from '../../utils/add-nodes-to-edges';
-import { skip } from 'rxjs';
+import { skip } from 'rxjs/operators';
 import { SpacePoint, Point } from '../../interfaces/point.interface';
 import { ViewportState } from '../../interfaces/viewport.interface';
 import { FlowStatusService } from '../../services/flow-status.service';
@@ -76,6 +76,15 @@ import { FlowRenderingService } from '../../services/flow-rendering.service';
 import { AlignmentHelperComponent } from '../alignment-helper/alignment-helper.component';
 import { AlignmentHelperSettings } from '../../interfaces/alignment-helper-settings.interface';
 import { AutoPanDirective } from '../../directives/auto-pan.directive';
+import { ResizeObserverService } from '../../services/resize-observer.service';
+import { RequestAnimationFrameBatchingService } from '../../services/request-animation-frame-batching.service';
+import { NodeDragControllerDirective } from '../../directives/node-drag-controller.directive';
+import { HtmlElementCacheService } from '../../services/html-element-cache.service';
+import { SvgGraphicElementCacheService } from '../../services/svg-graphic-element-cache.service';
+import { BasicElementCacheService } from '../../services/basic-element-cache.service';
+import { SelectionBoxComponent } from '../selection-box/selection-box.component';
+import { SelectionBoxContextDirective } from '../../directives/selection-box-context.directive';
+import { SelectionBoxSettings } from '../../interfaces/selection-box-settings.interface';
 
 const changesControllerHostDirective = {
   directive: ChangesControllerDirective,
@@ -92,6 +101,11 @@ const changesControllerHostDirective = {
     'edgesChanges.remove',
     'edgesChanges.select',
   ],
+};
+
+const nodeDragControllerHostDirective = {
+  directive: NodeDragControllerDirective,
+  outputs: ['nodeDragStart', 'nodeDrag', 'nodeDragEnd'],
 };
 
 @Component({
@@ -115,8 +129,13 @@ const changesControllerHostDirective = {
     OverlaysService,
     { provide: PreviewFlowRenderStrategyService, useClass: ViewportPreviewFlowRenderStrategyService },
     FlowRenderingService,
+    ResizeObserverService,
+    HtmlElementCacheService,
+    BasicElementCacheService,
+    SvgGraphicElementCacheService,
+    RequestAnimationFrameBatchingService,
   ],
-  hostDirectives: [changesControllerHostDirective],
+  hostDirectives: [changesControllerHostDirective, nodeDragControllerHostDirective],
   imports: [
     RootSvgReferenceDirective,
     RootSvgContextDirective,
@@ -132,6 +151,8 @@ const changesControllerHostDirective = {
     NgTemplateOutlet,
     PreviewFlowComponent,
     AlignmentHelperComponent,
+    SelectionBoxComponent,
+    SelectionBoxContextDirective,
     AutoPanDirective,
   ],
 })
@@ -213,6 +234,20 @@ export class VflowComponent {
   @Input()
   public set selectionMode(value: SelectionMode) {
     this.flowSettingsService.selectionMode.set(value);
+  }
+
+  /**
+   * Selection box behavior settings
+   * - mode: 'full' selects only fully enclosed entities
+   * - mode: 'partial' selects entities that intersect selection box
+   * - color: stroke/fill color for selection area (fill uses opacity)
+   */
+  @Input()
+  public set selectionBox(value: SelectionBoxSettings) {
+    this.flowSettingsService.selectionBox.update((selectionBox) => ({
+      ...selectionBox,
+      ...value,
+    }));
   }
 
   @Input()
@@ -416,9 +451,11 @@ export class VflowComponent {
   }
 
   /**
-   * Move to specified coordinate
+   * Sets the D3 zoom **translation** (`x`, `y`) while keeping the current zoom — the same meaning as
+   * `x` / `y` on the public {@link viewport} signal. This is not a node position in flow space; to
+   * center on a world point, use {@link fitView} or compute translate from flow coordinates and current `zoom`.
    *
-   * @param point point where to move
+   * @param point viewport translation `{ x, y }`
    */
   public panTo(point: Point): void {
     this.viewportService.writableViewport.set({

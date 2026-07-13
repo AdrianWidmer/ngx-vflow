@@ -8,7 +8,8 @@ import { FlowEntitiesService } from '../services/flow-entities.service';
 import { MAGIC_NUMBER_TO_FIX_GLITCH_IN_CHROME } from '../constants/magic-number-to-fix-glitch-in-chrome.constant';
 import { Contextable } from '../interfaces/contextable.interface';
 import { GroupNodeContext, NodeContext } from '../interfaces/template-context.interface';
-import { catchError, filter, Observable, of, shareReplay, switchMap } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, filter, shareReplay, switchMap } from 'rxjs/operators';
 import { NodePreview } from '../interfaces/node-preview.interface';
 import { FlowSettingsService } from '../services/flow-settings.service';
 import { NodeRenderingService } from '../services/node-rendering.service';
@@ -35,15 +36,6 @@ export class NodeModel<T = unknown>
   public height$: Observable<number>;
 
   /**
-   * @deprecated use width or height signals
-   */
-  public size = computed(() => ({ width: this.width(), height: this.height() }));
-  /**
-   * @deprecated use width$ or height$
-   */
-  public size$: Observable<{ width: number; height: number }>;
-
-  /**
    * If resizer is used, the node size fully depends on the resizer
    * Otherwise it calculates the size based on the content
    */
@@ -57,8 +49,11 @@ export class NodeModel<T = unknown>
 
   public selected = signal(false);
   public selected$: Observable<boolean>;
+  public preselected = signal(false);
 
   public preview = signal<NodePreview>({ style: {} });
+
+  public extent = signal<'parent' | null>(NODE_DEFAULTS.extent);
 
   public globalPoint = computed(() => {
     let parent = this.parent();
@@ -137,9 +132,14 @@ export class NodeModel<T = unknown>
     node: this.rawNode,
   };
 
-  public parent = computed(() => this.entitiesService.nodes().find((n) => n.rawNode.id === this.parentId()) ?? null);
+  public parent = computed(() => {
+    const parentId = this.parentId();
+    if (!parentId) return null;
 
-  public children = computed(() => this.entitiesService.nodes().filter((n) => n.parentId() === this.rawNode.id));
+    return this.entitiesService.nodeByIdMap().get(parentId) ?? null;
+  });
+
+  public children = computed(() => this.entitiesService.nodesByParentIdMap().get(this.rawNode.id) ?? []);
 
   public color = signal(NODE_DEFAULTS.color);
 
@@ -183,6 +183,10 @@ export class NodeModel<T = unknown>
       this.selected = rawNode.selected;
     }
 
+    if (rawNode.extent) {
+      this.extent = rawNode.extent;
+    }
+
     if (rawNode.type === 'default-group' && rawNode.color) {
       this.color = rawNode.color;
     }
@@ -201,6 +205,7 @@ export class NodeModel<T = unknown>
           node: rawNode,
           data: rawNode.data ?? signal(NODE_DEFAULTS.data as T),
           selected: this.selected.asReadonly(),
+          preselected: this.preselected.asReadonly(),
           shouldLoad: this.shouldLoad,
         },
       };
@@ -212,6 +217,7 @@ export class NodeModel<T = unknown>
           node: rawNode,
           data: rawNode.data ?? signal(NODE_DEFAULTS.data as T),
           selected: this.selected.asReadonly(),
+          preselected: this.preselected.asReadonly(),
           width: this.width.asReadonly(),
           height: this.height.asReadonly(),
           shouldLoad: this.shouldLoad,
@@ -225,6 +231,7 @@ export class NodeModel<T = unknown>
           node: rawNode,
           data: rawNode.data ?? signal(NODE_DEFAULTS.data as T),
           selected: this.selected.asReadonly(),
+          preselected: this.preselected.asReadonly(),
           width: this.width.asReadonly(),
           height: this.height.asReadonly(),
           shouldLoad: this.shouldLoad,
@@ -236,7 +243,6 @@ export class NodeModel<T = unknown>
     this.point$ = toObservable(this.point);
     this.width$ = toObservable(this.width);
     this.height$ = toObservable(this.height);
-    this.size$ = toObservable(this.size);
     this.selected$ = toObservable(this.selected);
     this.handles$ = toObservable(this.handles);
   }

@@ -1,16 +1,30 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { nodeToRect } from '../../utils/nodes';
-import { FlowStatusService, isNodeDragEndStatus, isNodeDragStartStatus } from '../../services/flow-status.service';
-import { rectToRectWithSides } from '../../interfaces/rect';
-import { Box } from '../../interfaces/box';
+import {
+  FlowStatusService,
+  isNodeDragEndStatus,
+  isNodeDragStartStatus,
+  isNodeDragStatus,
+} from '../../services/flow-status.service';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { filter, map, tap } from 'rxjs';
+import { filter, map, tap } from 'rxjs/operators';
 import { extendedComputed } from '../../utils/signals/extended-computed';
 import { NodeRenderingService } from '../../services/node-rendering.service';
-import { getSpacePoints } from '../../utils/get-space-points';
+import { RectSides, rectToSides } from '../../utils/rect';
+import { Rect } from '../../interfaces/rect';
+
+type RectWithSides = Rect & RectSides;
+
+interface AlignmentLine {
+  x: number;
+  y: number;
+  x2: number;
+  y2: number;
+  isCenter: boolean;
+}
 
 interface Intersection {
-  lines: (Box & { isCenter: boolean })[];
+  lines: AlignmentLine[];
   snappedX: number;
   snappedY: number;
 }
@@ -28,21 +42,27 @@ export class AlignmentHelperComponent {
   readonly tolerance = input(10);
   readonly lineColor = input('#1b262c');
 
-  protected isNodeDragging = computed(() => isNodeDragStartStatus(this.flowStatus.status()));
+  protected isNodeDragging = computed(
+    () => isNodeDragStartStatus(this.flowStatus.status()) || isNodeDragStatus(this.flowStatus.status()),
+  );
 
   protected readonly intersections = extendedComputed<Intersection>((lastValue) => {
     const status = this.flowStatus.status();
 
-    if (isNodeDragStartStatus(status)) {
+    if (isNodeDragStartStatus(status) || isNodeDragStatus(status)) {
       const node = status.payload.node;
+      const draggedRect = nodeToRect(node);
 
-      const d = rectToRectWithSides(nodeToRect(node));
+      const d: RectWithSides = { ...draggedRect, ...rectToSides(draggedRect) };
       const otherRects = this.nodeRenderingService
         .viewportNodes()
         .filter((n) => n !== node)
         // do not check children of the dragged node
         .filter((n) => !node.children().includes(n))
-        .map((n) => rectToRectWithSides(nodeToRect(n)));
+        .map((n) => {
+          const rect = nodeToRect(n);
+          return { ...rect, ...rectToSides(rect) } as RectWithSides;
+        });
 
       const lines: Intersection['lines'] = [];
 
@@ -124,9 +144,16 @@ export class AlignmentHelperComponent {
         tap(([node, intersections]) => {
           if (intersections) {
             const snapped = { x: intersections.snappedX, y: intersections.snappedY };
-            const parentIfExists = node.parent() ? [node.parent()!] : [];
 
-            node.setPoint(getSpacePoints(snapped, parentIfExists)[0]);
+            const parent = node.parent();
+            if (parent) {
+              node.setPoint({
+                x: snapped.x - parent.globalPoint().x,
+                y: snapped.y - parent.globalPoint().y,
+              });
+            } else {
+              node.setPoint(snapped);
+            }
           }
         }),
         takeUntilDestroyed(),
