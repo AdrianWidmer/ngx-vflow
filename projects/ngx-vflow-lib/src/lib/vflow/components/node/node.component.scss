@@ -23,6 +23,17 @@
   overflow: visible;
 }
 
+// Template-group svg is a CSS box: its whole width×height hit-tests even where nothing is
+// painted, so a frame-group spanning the graph would swallow all clicks. Make the box itself
+// transparent to pointer events; projected template content stays interactive.
+.vflow-node__svg--group {
+  pointer-events: none;
+
+  ::ng-deep * {
+    pointer-events: auto;
+  }
+}
+
 // Per-node SVG overlay for the resizer handles (drawn in node-local flow coords).
 // Sized to the node (width/height attrs) with overflow visible so the gap/corner handles show;
 // itself transparent to pointer events, individual resizer handles re-enable them.

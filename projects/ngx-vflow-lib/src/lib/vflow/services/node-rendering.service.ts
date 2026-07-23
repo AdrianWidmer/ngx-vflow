@@ -52,6 +52,12 @@ export class NodeRenderingService {
   });
 
   public pullNode(node: NodeModel) {
+    // An overlay group without children (frame around unparented nodes) gains nothing
+    // from elevation and would cover the whole graph — skip it.
+    if (isGroupNode(node) && !node.children().length) {
+      return;
+    }
+
     this.maxOrder++;
     // pull node
     node.renderOrder.set(this.maxOrder);

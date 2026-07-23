@@ -82,7 +82,7 @@
 <!-- Template group node -->
 @if (model().rawNode.type === 'template-group' && groupNodeTemplate()) {
   <svg:svg
-    class="vflow-node__svg selectable"
+    class="vflow-node__svg vflow-node__svg--group selectable"
     nodeHandlesController
     overflow="visible"
     [attr.width]="model().width()"
