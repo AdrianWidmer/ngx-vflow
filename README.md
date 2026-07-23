@@ -1,3 +1,6 @@
+> [!WARNING]
+> This is a **fork** of [ngx-vflow](https://github.com/artem-mangilev/ngx-vflow) containing experimental features (e.g. rendering the flow as an HTML overlay instead of SVG `foreignObject`). It is published as `@adrianwidmer/ngx-vflow` for internal use and may break or diverge at any time. **Most users should use the original [ngx-vflow](https://www.npmjs.com/package/ngx-vflow) package instead.**
+
 <div align="center">
 
 # ngx-vflow
@@ -29,6 +32,10 @@
 ## Installation
 
 ```bash
+# this fork
+npm install @adrianwidmer/ngx-vflow --save
+
+# original
 npm install ngx-vflow --save
 ```
 
@@ -39,6 +46,24 @@ npm install ngx-vflow --save
 | v0.x      | v16.2.0+  |
 | v1.x      | v17.3.12+ |
 | v2.x      | v19.2.17+ |
+
+## Publishing a New Version (this fork)
+
+Published manually to npm as `@adrianwidmer/ngx-vflow`:
+
+```bash
+# 1. Bump the version (patch/minor/major)
+npm version patch --prefix projects/ngx-vflow-lib
+
+# 2. Build the library (version is copied into dist)
+npx ng build ngx-vflow-lib
+
+# 3. Publish from dist
+cd dist/ngx-vflow-lib
+npm publish
+```
+
+Requires a one-time `npm login` with an account that owns the `@adrianwidmer` scope.
 
 ## Community & Support
 
