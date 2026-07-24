@@ -84,8 +84,36 @@ export class MapContextDirective implements OnInit {
         .on('end', this.handleZoomEnd);
 
       this.rootSvgSelection.call(this.zoomBehavior).on('dblclick.zoom', null);
+
+      // Non-passive so we can preventDefault (block page scroll / browser nav gestures).
+      this.rootSvg.addEventListener('wheel', this.handlePanOnScroll, { passive: false });
     });
   }
+
+  /**
+   * panOnScroll mode: plain two-finger scroll pans the viewport. Trackpad pinch is
+   * reported by all engines (Chrome/Firefox/Safari, macOS/Windows/Linux) as a wheel
+   * event with ctrlKey=true — those stay with d3-zoom (see filterCondition).
+   */
+  private handlePanOnScroll = (event: WheelEvent) => {
+    if (!this.flowSettingsService.panOnScroll() || isPinchWheel(event)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    // deltaMode 1 = lines (Firefox mouse wheel) — normalize to pixels
+    const factor = event.deltaMode === 1 ? 20 : 1;
+    const zoom = this.viewportService.readableViewport().zoom;
+
+    // translateBy multiplies by the current scale internally, so divide it out
+    // to pan by exact screen pixels
+    this.zoomBehavior.translateBy(
+      this.rootSvgSelection,
+      (-event.deltaX * factor) / zoom,
+      (-event.deltaY * factor) / zoom,
+    );
+  };
 
   private handleZoom = ({ transform }: ZoomEvent) => {
     // update public signal for user to read
@@ -117,9 +145,19 @@ export class MapContextDirective implements OnInit {
     });
   };
 
-  private filterCondition = (event: Event) =>
-    allowRootZoomForNodeTarget(event, this.keyboardService.isActiveAction('selection'));
+  private filterCondition = (event: Event) => {
+    // panOnScroll: plain wheel pans (handlePanOnScroll), only pinch (ctrlKey) zooms via d3
+    if (this.flowSettingsService.panOnScroll() && event.type === 'wheel' && !isPinchWheel(event as WheelEvent)) {
+      return false;
+    }
+
+    return allowRootZoomForNodeTarget(event, this.keyboardService.isActiveAction('selection'));
+  };
 }
+
+// Trackpad pinch arrives as a wheel event with ctrlKey set (all engines & platforms).
+// metaKey included so cmd+scroll on macOS also zooms, mirroring common flow tools.
+const isPinchWheel = (event: WheelEvent): boolean => event.ctrlKey || event.metaKey;
 
 const mapTransformToViewportState = (transform: ZoomTransform): ViewportState => ({
   zoom: transform.k,

@@ -27,6 +27,12 @@ export class FlowSettingsService {
    */
   public computedFlowHeight = signal(0);
 
+  /**
+   * When true, two-finger trackpad scroll (or mouse wheel) pans the viewport
+   * and pinch gestures zoom it. When false (default), wheel/scroll zooms.
+   */
+  public panOnScroll = signal(false);
+
   public minZoom = signal(0.5);
 
   public maxZoom = signal(3);

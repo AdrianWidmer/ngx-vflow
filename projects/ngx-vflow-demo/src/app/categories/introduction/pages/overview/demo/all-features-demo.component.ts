@@ -11,6 +11,7 @@ import { TransformNodeComponent } from './components/transform-node.component';
     [background]="{ type: 'dots' }"
     [optimization]="{ detachedGroupsLayer: true }"
     [alignmentHelper]="true"
+    [panOnScroll]="true"
     (connect)="createEdge($event)"
     (componentNodeEvent)="onComponentEvent($event)">
     <ng-template let-ctx edge>

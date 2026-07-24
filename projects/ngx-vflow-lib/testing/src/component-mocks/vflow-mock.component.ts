@@ -151,6 +151,9 @@ export class VflowMockComponent implements AsInterface<VflowComponent>, OnInit {
   public readonly maxZoom = 3;
 
   @Input()
+  public readonly panOnScroll = false;
+
+  @Input()
   public readonly background: Background | string = '#fff';
 
   @Input()
