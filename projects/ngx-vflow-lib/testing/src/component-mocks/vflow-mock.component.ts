@@ -154,6 +154,9 @@ export class VflowMockComponent implements AsInterface<VflowComponent>, OnInit {
   public readonly panOnScroll = false;
 
   @Input()
+  public readonly connectionStartDistance = 0;
+
+  @Input()
   public readonly background: Background | string = '#fff';
 
   @Input()

@@ -26,6 +26,7 @@ import { NgTemplateOutlet, NgComponentOutlet, AsyncPipe } from '@angular/common'
 import { DefaultNodeComponent } from '../default-node/default-node.component';
 import { PointerDirective } from '../../directives/pointer.directive';
 import { SpacePointContextDirective } from '../../directives/space-point-context.directive';
+import { deferPointerStart } from '../../utils/defer-pointer-start';
 
 // TODO: fix loading of these by @defer (should work in Angular 18+)
 // public components that uses in default node (loaded by defer)
@@ -137,7 +138,9 @@ export class NodeComponent implements OnInit, OnDestroy {
     // ignore drag by stopping propagation
     event.stopPropagation();
 
-    this.connectionController?.startConnection(handle);
+    deferPointerStart(event, this.flowSettingsService.connectionStartDistance(), () =>
+      this.connectionController?.startConnection(handle),
+    );
   }
 
   protected validateConnection(handle: HandleModel) {

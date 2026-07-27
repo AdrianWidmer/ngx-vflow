@@ -212,6 +212,16 @@ export class VflowComponent {
   }
 
   /**
+   * px the pointer must travel from press before a connection/reconnection drag
+   * starts (default 0 = start on press). Set a few px so large handle surfaces
+   * still receive plain clicks without flashing connection mode.
+   */
+  @Input()
+  public set connectionStartDistance(value: number) {
+    this.flowSettingsService.connectionStartDistance.set(value);
+  }
+
+  /**
    * Background for flow
    */
   @Input()

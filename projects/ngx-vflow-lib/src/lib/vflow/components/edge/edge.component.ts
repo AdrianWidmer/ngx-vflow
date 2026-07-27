@@ -11,6 +11,7 @@ import { HandleModel } from '../../models/handle.model';
 import { FlowStatusService } from '../../services/flow-status.service';
 import { EdgeRenderingService } from '../../services/edge-rendering.service';
 import { PointerDirective } from '../../directives/pointer.directive';
+import { deferPointerStart } from '../../utils/defer-pointer-start';
 
 @Component({
   selector: 'g[edge]',
@@ -62,6 +63,8 @@ export class EdgeComponent {
     // ignore drag by stopping propagation
     event.stopPropagation();
 
-    this.connectionController?.startReconnection(handle, this.model());
+    deferPointerStart(event, this.flowSettingsService.connectionStartDistance(), () =>
+      this.connectionController?.startReconnection(handle, this.model()),
+    );
   }
 }

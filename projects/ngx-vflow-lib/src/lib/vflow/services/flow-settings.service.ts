@@ -33,6 +33,12 @@ export class FlowSettingsService {
    */
   public panOnScroll = signal(false);
 
+  /**
+   * px the pointer must travel from press before a connection/reconnection drag
+   * starts (0 = start on press). Lets large handle surfaces still receive plain clicks.
+   */
+  public connectionStartDistance = signal(0);
+
   public minZoom = signal(0.5);
 
   public maxZoom = signal(3);
