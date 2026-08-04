@@ -203,6 +203,18 @@ export class VflowComponent {
   }
 
   /**
+   * Max zoom change a single wheel/pinch event may apply, as a fraction of the
+   * current zoom: 0.07 (default) = 7% per event, roughly 10 mouse notches to
+   * double. Raw wheel deltas differ by ~50x between platforms, so this cap is
+   * what keeps one gesture from crossing the whole min/max range on Windows and
+   * Linux. Raise for a snappier mouse wheel, lower for calmer touchpads.
+   */
+  @Input()
+  public set zoomStep(value: number) {
+    this.flowSettingsService.zoomStep.set(value);
+  }
+
+  /**
    * When true, two-finger trackpad scroll (or mouse wheel) pans the viewport
    * instead of zooming; pinch gestures still zoom. Default false (scroll zooms).
    */

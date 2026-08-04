@@ -151,6 +151,9 @@ export class VflowMockComponent implements AsInterface<VflowComponent>, OnInit {
   public readonly maxZoom = 3;
 
   @Input()
+  public readonly zoomStep = 0.07;
+
+  @Input()
   public readonly panOnScroll = false;
 
   @Input()

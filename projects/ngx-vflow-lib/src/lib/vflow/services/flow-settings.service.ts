@@ -43,6 +43,14 @@ export class FlowSettingsService {
 
   public maxZoom = signal(3);
 
+  /**
+   * Max zoom change a single wheel/pinch event may apply, as a fraction:
+   * 0.07 = 7% per event (~10 mouse notches to double). Caps fat wheel events so
+   * one gesture cannot leap the whole scale extent. Raise for a snappier mouse
+   * wheel, lower for calmer touchpads.
+   */
+  public zoomStep = signal(0.07);
+
   public background = signal<Background>({ type: 'solid', color: '#fff' });
 
   public snapGrid = signal<[number, number]>([1, 1]);

@@ -9,6 +9,7 @@ import { SelectionService, ViewportForSelection } from '../services/selection.se
 import { FlowSettingsService } from '../services/flow-settings.service';
 import { KeyboardService } from '../services/keyboard.service';
 import { allowRootZoomForNodeTarget } from '../utils/allow-root-zoom-for-node-target';
+import { wheelDelta } from '../utils/wheel-delta';
 
 @Directive({
   standalone: true,
@@ -78,6 +79,7 @@ export class MapContextDirective implements OnInit {
     this.zone.runOutsideAngular(() => {
       this.zoomBehavior = zoom<HTMLElement, unknown>()
         .scaleExtent([this.flowSettingsService.minZoom(), this.flowSettingsService.maxZoom()])
+        .wheelDelta(this.handleWheelDelta)
         .filter(this.filterCondition)
         .on('start', this.handleZoomStart)
         .on('zoom', this.handleZoom)
@@ -102,8 +104,8 @@ export class MapContextDirective implements OnInit {
 
     event.preventDefault();
 
-    // deltaMode 1 = lines (Firefox mouse wheel) — normalize to pixels
-    const factor = event.deltaMode === 1 ? 20 : 1;
+    // deltaMode 1 = lines (Firefox mouse wheel), 2 = pages — normalize to pixels
+    const factor = event.deltaMode === 1 ? 20 : event.deltaMode === 2 ? this.rootSvg.clientHeight : 1;
     const zoom = this.viewportService.readableViewport().zoom;
 
     // translateBy multiplies by the current scale internally, so divide it out
@@ -114,6 +116,9 @@ export class MapContextDirective implements OnInit {
       (-event.deltaY * factor) / zoom,
     );
   };
+
+  // d3's default delta is unusable across platforms, see wheelDelta
+  private handleWheelDelta = (event: WheelEvent): number => wheelDelta(event, this.flowSettingsService.zoomStep());
 
   private handleZoom = ({ transform }: ZoomEvent) => {
     // update public signal for user to read
