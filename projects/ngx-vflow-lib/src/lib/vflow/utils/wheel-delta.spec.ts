@@ -50,9 +50,25 @@ describe('wheelDelta', () => {
     expect(factor(inDelta) * factor(outDelta)).toBeCloseTo(1, 10);
   });
 
-  it('honors a larger zoomStep', () => {
+  it('honors the zoomStep knob', () => {
+    // deltaY big enough that the cap, not the raw delta, decides
+    expect(factor(wheelDelta(new WheelEvent('wheel', { deltaY: -500 }), 0.3, false))).toBeCloseTo(1.3, 5);
+    expect(factor(wheelDelta(new WheelEvent('wheel', { deltaY: -500 }), 0.02, false))).toBeCloseTo(1.02, 5);
+  });
+
+  it('leaves the delta alone when zoomStep is above it', () => {
     const delta = wheelDelta(new WheelEvent('wheel', { deltaY: -100 }), 0.3, false);
 
-    expect(factor(delta)).toBeCloseTo(1.3, 5);
+    expect(delta).toBeCloseTo(0.2, 5);
+  });
+
+  it('no longer crosses the whole scale extent in a Windows pinch burst', () => {
+    // the reported bug: ~10 ctrl+wheel events at 60fps took the flow from 0.5 to maxZoom 3
+    let zoom = 0.5;
+    for (let i = 0; i < 10; i++) {
+      zoom *= factor(wheelDelta(new WheelEvent('wheel', { deltaY: -100, ctrlKey: true }), 0.07, false));
+    }
+
+    expect(zoom).toBeLessThan(1.1);
   });
 });
