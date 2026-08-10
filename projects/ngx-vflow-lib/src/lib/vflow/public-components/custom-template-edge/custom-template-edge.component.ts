@@ -10,8 +10,11 @@ import { EdgeRenderingService } from '../../services/edge-rendering.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
-    '(mousedown)': 'pull()',
-    '(touchstart)': 'pull()',
+    // Elevate on CLICK, never on mousedown: pulling re-sorts the edge list, and Angular's reorder
+    // detaches + reinserts this <g> between mousedown and mouseup — after which Chrome dispatches
+    // no `click` at all, so SelectableDirective never sees the wire and it can't be selected or
+    // deleted. The built-in edge pulls from its click handler for the same reason.
+    '(click)': 'pull()',
   },
 })
 export class CustomTemplateEdgeComponent {
