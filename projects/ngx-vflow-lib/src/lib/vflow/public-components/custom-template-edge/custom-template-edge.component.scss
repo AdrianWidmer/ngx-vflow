@@ -1,5 +1,9 @@
+// The edges svg is pointer-events:none (so empty areas fall through to nodes / the pan surface);
+// this hit path has to opt back in, exactly like the built-in edge does — without it a template
+// edge can never be clicked, so it can never be selected or deleted.
 .interactive-edge {
   fill: none;
   stroke-width: 20;
   stroke: transparent;
+  pointer-events: stroke;
 }
