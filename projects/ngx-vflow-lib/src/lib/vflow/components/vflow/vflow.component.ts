@@ -224,6 +224,16 @@ export class VflowComponent {
   }
 
   /**
+   * When false, the user cannot pan or zoom the viewport — wheel/pinch zoom, drag
+   * panning and panOnScroll are all ignored. Programmatic viewport calls (fitView,
+   * zoomTo, panTo) still work. Default true.
+   */
+  @Input()
+  public set panZoomEnabled(value: boolean) {
+    this.flowSettingsService.panZoomEnabled.set(value);
+  }
+
+  /**
    * px the pointer must travel from press before a connection/reconnection drag
    * starts (default 0 = start on press). Set a few px so large handle surfaces
    * still receive plain clicks without flashing connection mode.

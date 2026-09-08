@@ -98,7 +98,7 @@ export class MapContextDirective implements OnInit {
    * event with ctrlKey=true — those stay with d3-zoom (see filterCondition).
    */
   private handlePanOnScroll = (event: WheelEvent) => {
-    if (!this.flowSettingsService.panOnScroll() || isPinchWheel(event)) {
+    if (!this.flowSettingsService.panZoomEnabled() || !this.flowSettingsService.panOnScroll() || isPinchWheel(event)) {
       return;
     }
 
@@ -151,6 +151,11 @@ export class MapContextDirective implements OnInit {
   };
 
   private filterCondition = (event: Event) => {
+    // the viewport lock gates every USER gesture; programmatic calls bypass d3's filter
+    if (!this.flowSettingsService.panZoomEnabled()) {
+      return false;
+    }
+
     // panOnScroll: plain wheel pans (handlePanOnScroll), only pinch (ctrlKey) zooms via d3
     if (this.flowSettingsService.panOnScroll() && event.type === 'wheel' && !isPinchWheel(event as WheelEvent)) {
       return false;

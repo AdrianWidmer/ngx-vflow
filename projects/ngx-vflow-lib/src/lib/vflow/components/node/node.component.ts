@@ -135,6 +135,17 @@ export class NodeComponent implements OnInit, OnDestroy {
   }
 
   protected startConnection(event: Event, handle: HandleModel) {
+    // A handle template may scope where connections start: when it contains an element with the
+    // `vflow-connection-grip` class, only pointer-downs inside that element begin a connection.
+    // Everywhere else the event is left alone, so it bubbles to the node and drags/selects it
+    // (mirrors the `vflow-drag-handle` scoping in DraggableService). Templates without a grip
+    // keep the legacy behavior: the whole handle starts connections.
+    const target = event.target as Element | null;
+    const handleHost = target?.closest('.vflow-handle');
+    if (handleHost?.querySelector('.vflow-connection-grip') && !target?.closest('.vflow-connection-grip')) {
+      return;
+    }
+
     // ignore drag by stopping propagation
     event.stopPropagation();
 

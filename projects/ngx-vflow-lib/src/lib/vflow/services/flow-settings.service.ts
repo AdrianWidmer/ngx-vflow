@@ -34,6 +34,13 @@ export class FlowSettingsService {
   public panOnScroll = signal(false);
 
   /**
+   * Master switch for user-driven viewport changes. When false, wheel/pinch zoom,
+   * drag panning and panOnScroll are all ignored; programmatic viewport calls
+   * (fitView, zoomTo, panTo) still work.
+   */
+  public panZoomEnabled = signal(true);
+
+  /**
    * px the pointer must travel from press before a connection/reconnection drag
    * starts (0 = start on press). Lets large handle surfaces still receive plain clicks.
    */
