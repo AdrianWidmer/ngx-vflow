@@ -224,6 +224,15 @@ export class VflowComponent {
   }
 
   /**
+   * When true, dragging with the right mouse button pans the viewport (over nodes as
+   * well) and the context menu inside the flow is suppressed. Default false.
+   */
+  @Input()
+  public set panOnRightButton(value: boolean) {
+    this.flowSettingsService.panOnRightButton.set(value);
+  }
+
+  /**
    * When false, the user cannot pan or zoom the viewport — wheel/pinch zoom, drag
    * panning and panOnScroll are all ignored. Programmatic viewport calls (fitView,
    * zoomTo, panTo) still work. Default true.

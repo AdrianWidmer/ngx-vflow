@@ -157,6 +157,9 @@ export class VflowMockComponent implements AsInterface<VflowComponent>, OnInit {
   public readonly panOnScroll = false;
 
   @Input()
+  public readonly panOnRightButton = false;
+
+  @Input()
   public readonly panZoomEnabled = true;
 
   @Input()

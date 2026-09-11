@@ -34,6 +34,12 @@ export class FlowSettingsService {
   public panOnScroll = signal(false);
 
   /**
+   * When true, dragging with the right mouse button pans the viewport — anywhere,
+   * nodes included — and the browser context menu inside the flow is suppressed.
+   */
+  public panOnRightButton = signal(false);
+
+  /**
    * Master switch for user-driven viewport changes. When false, wheel/pinch zoom,
    * drag panning and panOnScroll are all ignored; programmatic viewport calls
    * (fitView, zoomTo, panTo) still work.

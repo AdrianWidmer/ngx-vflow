@@ -89,6 +89,7 @@ export class MapContextDirective implements OnInit {
 
       // Non-passive so we can preventDefault (block page scroll / browser nav gestures).
       this.rootSvg.addEventListener('wheel', this.handlePanOnScroll, { passive: false });
+      this.rootSvg.addEventListener('contextmenu', this.handleContextMenu);
     });
   }
 
@@ -116,6 +117,19 @@ export class MapContextDirective implements OnInit {
       (-event.deltaY * factor) / zoom,
     );
   };
+
+  /**
+   * panOnRightButton mode: the menu would open mid-drag (macOS fires contextmenu on
+   * mousedown, Windows/Linux on mouseup), so it is suppressed for the whole flow.
+   */
+  private handleContextMenu = (event: MouseEvent) => {
+    if (this.rightButtonPanEnabled()) {
+      event.preventDefault();
+    }
+  };
+
+  private rightButtonPanEnabled = (): boolean =>
+    this.flowSettingsService.panZoomEnabled() && this.flowSettingsService.panOnRightButton();
 
   // d3's default delta is unusable across platforms, see wheelDelta
   private handleWheelDelta = (event: WheelEvent): number => wheelDelta(event, this.flowSettingsService.zoomStep());
@@ -159,6 +173,12 @@ export class MapContextDirective implements OnInit {
     // panOnScroll: plain wheel pans (handlePanOnScroll), only pinch (ctrlKey) zooms via d3
     if (this.flowSettingsService.panOnScroll() && event.type === 'wheel' && !isPinchWheel(event as WheelEvent)) {
       return false;
+    }
+
+    // right-button pan: skips the node-target check, so the drag starts over nodes too
+    // (node dragging is left-button only, see DraggableService)
+    if (this.rightButtonPanEnabled() && event.type === 'mousedown' && (event as MouseEvent).button === 2) {
+      return true;
     }
 
     return allowRootZoomForNodeTarget(event, this.keyboardService.isActiveAction('selection'));
