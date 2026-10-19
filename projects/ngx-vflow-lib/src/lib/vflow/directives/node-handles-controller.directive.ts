@@ -34,16 +34,18 @@ export class NodeHandlesControllerDirective implements OnInit {
             (curr) => previousHandles.find((prev) => curr.hostReference === prev.hostReference) === undefined,
           );
 
+          // The callbacks read the node's handles when they run, not the list of this emission: a
+          // handle added later (pins unfolding) must be re-measured when the node resizes, too.
           if (!isTrackingHostElement) {
             this.resizeObserverService.addObserver(this.hostElementRef.nativeElement, () => {
-              currentHandles.forEach((h) => h.updateHost());
+              model.handles().forEach((h) => h.updateHost());
             });
             isTrackingHostElement = true;
           }
 
           handlesToAdd.forEach((h) =>
             this.resizeObserverService.addObserver(h.hostReference, () => {
-              currentHandles.forEach((h) => h.updateHost());
+              model.handles().forEach((h) => h.updateHost());
             }),
           );
 
