@@ -9,7 +9,7 @@ import { SelectionService, ViewportForSelection } from '../services/selection.se
 import { FlowSettingsService } from '../services/flow-settings.service';
 import { KeyboardService } from '../services/keyboard.service';
 import { allowRootZoomForNodeTarget } from '../utils/allow-root-zoom-for-node-target';
-import { wheelDelta } from '../utils/wheel-delta';
+import { isMouseWheel, wheelDelta } from '../utils/wheel-delta';
 
 @Directive({
   standalone: true,
@@ -96,10 +96,11 @@ export class MapContextDirective implements OnInit {
   /**
    * panOnScroll mode: plain two-finger scroll pans the viewport. Trackpad pinch is
    * reported by all engines (Chrome/Firefox/Safari, macOS/Windows/Linux) as a wheel
-   * event with ctrlKey=true — those stay with d3-zoom (see filterCondition).
+   * event with ctrlKey=true — those stay with d3-zoom (see filterCondition), as does
+   * a mouse wheel, which zooms.
    */
   private handlePanOnScroll = (event: WheelEvent) => {
-    if (!this.flowSettingsService.panZoomEnabled() || !this.flowSettingsService.panOnScroll() || isPinchWheel(event)) {
+    if (!this.flowSettingsService.panZoomEnabled() || !this.scrollPans(event)) {
       return;
     }
 
@@ -127,6 +128,9 @@ export class MapContextDirective implements OnInit {
       event.preventDefault();
     }
   };
+
+  private scrollPans = (event: WheelEvent): boolean =>
+    this.flowSettingsService.panOnScroll() && !isPinchWheel(event) && !isMouseWheel(event);
 
   private rightButtonPanEnabled = (): boolean =>
     this.flowSettingsService.panZoomEnabled() && this.flowSettingsService.panOnRightButton();
@@ -170,8 +174,8 @@ export class MapContextDirective implements OnInit {
       return false;
     }
 
-    // panOnScroll: plain wheel pans (handlePanOnScroll), only pinch (ctrlKey) zooms via d3
-    if (this.flowSettingsService.panOnScroll() && event.type === 'wheel' && !isPinchWheel(event as WheelEvent)) {
+    // panOnScroll: plain trackpad scroll pans (handlePanOnScroll); pinch and mouse wheel zoom via d3
+    if (event.type === 'wheel' && this.scrollPans(event as WheelEvent)) {
       return false;
     }
 

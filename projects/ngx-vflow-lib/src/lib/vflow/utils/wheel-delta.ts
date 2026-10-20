@@ -21,12 +21,36 @@ export const isMacPlatform = (): boolean =>
  * of current zoom, e.g. 0.07 = at most 7% per event).
  */
 export function wheelDelta(event: WheelEvent, zoomStep: number, isMac = isMacPlatform()): number {
+  const max = Math.log2(1 + zoomStep);
+
+  // one notch = one zoomStep; a notch is ~4px on macOS but ~100px on Windows
+  if (isMouseWheel(event)) {
+    return -Math.sign(event.deltaY) * max;
+  }
+
   // deltaMode 0 = px, 1 = lines, 2 = pages
   const perUnit = event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002;
   const boost = event.ctrlKey && isMac ? MAC_PINCH_BOOST : 1;
   const delta = -event.deltaY * perUnit * boost;
 
-  const max = Math.log2(1 + zoomStep);
-
   return Math.max(-max, Math.min(max, delta));
+}
+
+/**
+ * Best-effort mouse wheel vs. trackpad detection — browsers don't expose the device.
+ * - Firefox reports a mouse wheel in lines/pages, trackpads in px.
+ * - Chrome/Safari report the non-standard wheelDeltaY as whole notches × 120 for a
+ *   mouse, but derive it as -3 × deltaY (px / 40 per tick × 120) for trackpads.
+ *
+ * ponytail: heuristic; free-spinning hi-res wheels (non-120 notches) read as trackpad.
+ * Upgrade path: also track event cadence like mapbox-gl's scroll_zoom handler.
+ */
+export function isMouseWheel(event: WheelEvent): boolean {
+  if (event.deltaMode !== 0) {
+    return true;
+  }
+
+  const notches = (event as WheelEvent & { wheelDeltaY?: number }).wheelDeltaY ?? 0;
+
+  return notches !== 0 && notches % 120 === 0 && notches !== -3 * event.deltaY;
 }

@@ -1,7 +1,45 @@
-import { wheelDelta } from './wheel-delta';
+import { isMouseWheel, wheelDelta } from './wheel-delta';
 
 // d3-zoom applies k *= 2^delta, so this is the zoom factor a delta produces
 const factor = (delta: number) => 2 ** delta;
+
+// wheelDeltaY is non-standard and not settable through WheelEventInit
+const chromeWheel = (deltaY: number, notches: number) => {
+  const event = new WheelEvent('wheel', { deltaY });
+  Object.defineProperty(event, 'wheelDeltaY', { value: -Math.sign(deltaY) * notches });
+
+  return event;
+};
+
+describe('isMouseWheel', () => {
+  it('detects a mouse wheel', () => {
+    expect(isMouseWheel(chromeWheel(4.000244140625, 120)))
+      .withContext('macOS Chrome notch')
+      .toBeTrue();
+    expect(isMouseWheel(chromeWheel(100, 120)))
+      .withContext('Windows notch')
+      .toBeTrue();
+    expect(isMouseWheel(chromeWheel(200, 240)))
+      .withContext('two notches')
+      .toBeTrue();
+    expect(isMouseWheel(new WheelEvent('wheel', { deltaY: 3, deltaMode: 1 })))
+      .withContext('Firefox')
+      .toBeTrue();
+  });
+
+  it('detects a trackpad', () => {
+    expect(isMouseWheel(chromeWheel(7, 21)))
+      .withContext('small swipe')
+      .toBeFalse();
+    // wheelDeltaY -3 × deltaY happens to be a multiple of 120
+    expect(isMouseWheel(chromeWheel(40, 120)))
+      .withContext('fast swipe')
+      .toBeFalse();
+    expect(isMouseWheel(new WheelEvent('wheel', { deltaX: 12 })))
+      .withContext('horizontal only')
+      .toBeFalse();
+  });
+});
 
 describe('wheelDelta', () => {
   it('caps a fat Windows/Linux wheel event at zoomStep', () => {
@@ -36,10 +74,12 @@ describe('wheelDelta', () => {
     expect(delta).toBeCloseTo(0.004, 5);
   });
 
-  it('normalizes Firefox line mode', () => {
-    const delta = wheelDelta(new WheelEvent('wheel', { deltaY: -3, deltaMode: 1 }), 0.2, false);
+  it('takes exactly one zoomStep per mouse notch, whatever its size', () => {
+    const firefox = wheelDelta(new WheelEvent('wheel', { deltaY: -3, deltaMode: 1 }), 0.2, false);
+    const macChrome = wheelDelta(chromeWheel(4.000244140625, 120), 0.2, true);
 
-    expect(delta).toBeCloseTo(0.15, 5);
+    expect(factor(firefox)).toBeCloseTo(1.2, 5);
+    expect(factor(macChrome)).toBeCloseTo(1 / 1.2, 5);
   });
 
   it('keeps zoom-in and zoom-out symmetric', () => {

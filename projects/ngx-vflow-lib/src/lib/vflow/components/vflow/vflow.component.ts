@@ -215,8 +215,9 @@ export class VflowComponent {
   }
 
   /**
-   * When true, two-finger trackpad scroll (or mouse wheel) pans the viewport
-   * instead of zooming; pinch gestures still zoom. Default false (scroll zooms).
+   * When true, two-finger trackpad scroll pans the viewport instead of zooming;
+   * pinch gestures and a mouse wheel still zoom (pair with panOnRightButton to pan
+   * with a mouse). Default false (scroll zooms).
    */
   @Input()
   public set panOnScroll(value: boolean) {
